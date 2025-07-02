@@ -124,13 +124,16 @@ def add_rows(df):
         pers["linkedin_url"] = key
         pers["liked_posts"].update(row["liked_posts"])
 
+# Voeg eerst de oude historie toe
 add_rows(df_hist)
+
+# Voeg daarna de nieuwe maanddata toe
 add_rows(df_new)
 
-# Naar dataframe
+# Zet de gecombineerde data om naar een lijst van dicts
 rows = []
 for pers in combined.values():
-    liked = list(pers["liked_posts"])
+    liked = list(pers["liked_posts"])  # omzetten naar lijst voor CSV
     rows.append({
         "first_name": pers["first_name"],
         "last_name": pers["last_name"],
@@ -139,14 +142,20 @@ for pers in combined.values():
         "total_likes": len(liked)
     })
 
+# Zet de lijst om naar een DataFrame en sorteer op meest actieve mensen
 df_final = pd.DataFrame(rows).sort_values("total_likes", ascending=False)
+
+# Zet de liked_posts weer om naar string voor CSV-opslag
 df_final["liked_posts"] = df_final["liked_posts"].apply(lambda x: str(x))
 
-# Opslaan
+# Zorg dat de history-map bestaat
 HISTORY_DIR.mkdir(exist_ok=True)
+
+# Bepaal nieuw bestandsnummer
 new_n = hist_n + 1
 out_path = HISTORY_DIR / f"linkedin_likes_history_{new_n}.csv"
+
+# Schrijf de nieuwe gecombineerde dataset weg
 df_final.to_csv(out_path, index=False)
 
 print(f"✅ Gecombineerde dataset opgeslagen: {out_path.name}")
-
