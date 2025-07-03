@@ -1,27 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-Combineer het laatste history-bestand met de nieuwste LinkedIn-maand-dump
-en schrijf een nieuw, opgehoogd history-bestand terug.
-"""
-
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
 import json, re, sys
 
-# ──────────────────────────────────────────────────────────────────────
 # 1.  BASIS-MAPPEN (PAS DIT EVENTUEEL AAN)
-# ──────────────────────────────────────────────────────────────────────
 BASE_DIR     = Path(__file__).resolve().parent
 HISTORY_DIR  = BASE_DIR / "history"
 MONTHLY_DIR  = BASE_DIR / "monthly_data"
 
 
-# ──────────────────────────────────────────────────────────────────────
 # 2.  HULPFUNCTIES
-# ──────────────────────────────────────────────────────────────────────
 HIST_RX   = re.compile(r"linkedin_likes_history_(\d+)\.csv$", re.I)
 MONTH_RX  = re.compile(r"LinkedIn_interactions_(\d{2})_(\d{2})_(\d{4})\.json$", re.I)
 
@@ -58,9 +49,7 @@ def split_posts(cell) -> set[str]:
         return set()
     return set(filter(None, re.split(r'[\s,]+', str(cell).strip())))
 
-# ──────────────────────────────────────────────────────────────────────
 # 3.  LAATSTE HISTORY + MEEST RECENTE MAAND-DUMP OPHALEN
-# ──────────────────────────────────────────────────────────────────────
 hist_path, hist_nr = latest_history(HISTORY_DIR)
 if hist_path is None:
     print("⚠️  Nog geen history-bestand gevonden; er wordt een nieuw gestart.")
@@ -75,9 +64,7 @@ monthly_path = latest_monthly(MONTHLY_DIR)
 print(f"➜  Gebruik history : {hist_path or '(nieuw)'}")
 print(f"➜  Gebruik monthly : {monthly_path}")
 
-# ──────────────────────────────────────────────────────────────────────
 # 4.  HISTORY INLEZEN EN OMZETTEN NAAR DICT
-# ──────────────────────────────────────────────────────────────────────
 hist_df["liked_posts_set"] = hist_df["liked_posts"].apply(split_posts)
 people = {
     row.linkedin_url: {
@@ -88,9 +75,7 @@ people = {
     for _, row in hist_df.iterrows()
 }
 
-# ──────────────────────────────────────────────────────────────────────
 # 5.  MAAND-JSON VERWERKEN
-# ──────────────────────────────────────────────────────────────────────
 with open(monthly_path, encoding="utf-8") as fh:
     monthly = json.load(fh)
 
@@ -107,9 +92,7 @@ for post in monthly:
         )
         person["liked_posts"].add(post_url)
 
-# ──────────────────────────────────────────────────────────────────────
 # 6.  NIEUW DATAFRAME BOUWEN
-# ──────────────────────────────────────────────────────────────────────
 rows = []
 for url, info in people.items():
     posts_sorted = sorted(info["liked_posts"])
@@ -126,9 +109,7 @@ new_hist_df = (
       .sort_values(["first_name","last_name"], ignore_index=True)
 )
 
-# ──────────────────────────────────────────────────────────────────────
 # 7.  OPSLAAN ALS VOLGENDE HISTORY-BESTAND
-# ──────────────────────────────────────────────────────────────────────
 next_nr   = hist_nr + 1            # eerste keer wordt dat 1
 out_path  = HISTORY_DIR / f"linkedin_likes_history_{next_nr}.csv"
 new_hist_df.to_csv(out_path, index=False, encoding="utf-8")
