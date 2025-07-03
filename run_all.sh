@@ -1,5 +1,4 @@
 #!/bin/bash
-
 echo "▶️  Run update_linkedin_likes.py..."
 python update_linkedin_likes.py
 
@@ -8,6 +7,9 @@ git add history/linkedin_likes_history_*.csv
 
 echo "📝  Commit wijzigingen..."
 git commit -m "Voeg nieuwe history-bestanden toe"
+
+echo "🔄  Haal laatste wijzigingen van GitHub binnen (pull)..."
+git pull --rebase
 
 echo "🚀  Push naar GitHub..."
 git push
